@@ -1,0 +1,914 @@
+document.addEventListener('DOMContentLoaded', () => {
+    // Envelope Interaction
+    const envelopeWrapper = document.querySelector('.envelope-wrapper');
+    
+    envelopeWrapper.addEventListener('click', () => {
+        envelopeWrapper.classList.toggle('open');
+    });
+
+    // Create Floating Particles
+    const particlesContainer = document.getElementById('particles');
+    const numParticles = 30;
+
+    for (let i = 0; i < numParticles; i++) {
+        createParticle();
+    }
+
+    function createParticle() {
+        const particle = document.createElement('div');
+        particle.classList.add('petal');
+        
+        // Randomize size, position, and animation duration
+        const size = Math.random() * 15 + 10; // 10px to 25px
+        const left = Math.random() * 100; // 0% to 100%
+        const animationDuration = Math.random() * 5 + 5; // 5s to 10s
+        const delay = Math.random() * 5; // 0s to 5s
+        
+        particle.style.width = `${size}px`;
+        particle.style.height = `${size}px`;
+        particle.style.left = `${left}vw`;
+        particle.style.animationDuration = `${animationDuration}s, ${animationDuration/2}s`;
+        particle.style.animationDelay = `${delay}s, ${delay}s`;
+        
+        // Randomize color slightly for depth
+        const hue = 350 + Math.random() * 20; // Pinks/Reds
+        particle.style.backgroundColor = `hsl(${hue}, 100%, 75%)`;
+
+        particlesContainer.appendChild(particle);
+        
+        // Remove and recreate when animation ends to keep them going infinitely
+        setTimeout(() => {
+            particle.remove();
+            createParticle();
+        }, (animationDuration + delay) * 1000);
+    }
+    
+    // Smooth scrolling for arrow
+    const scrollIndicator = document.querySelector('.scroll-indicator');
+    scrollIndicator.addEventListener('click', () => {
+        document.getElementById('message').scrollIntoView({ behavior: 'smooth' });
+    });
+
+    // Love Overlay Logic
+    const jabeenBtn = document.getElementById('jabeenBtn');
+    const overlay = document.getElementById('love-overlay');
+
+    window.showPopup = function() {
+        const questionBox = document.getElementById('questionBox');
+        const popupPhoto = document.getElementById('popupPhoto');
+        const bgMusic = document.getElementById('bgMusic');
+        
+        // Play the background music!
+        bgMusic.volume = 0.4; // Slightly lower volume so it's pleasant
+        bgMusic.play().catch(e => console.log("Audio couldn't auto-play"));
+
+        questionBox.style.transition = 'opacity 0.3s ease';
+        questionBox.style.opacity = '0';
+        
+        setTimeout(() => {
+            questionBox.style.display = 'none';
+            popupPhoto.style.display = 'flex';
+            // Trigger reflow
+            void popupPhoto.offsetWidth;
+            popupPhoto.style.opacity = '1';
+            popupPhoto.style.transform = 'scale(1)';
+        }, 300);
+    };
+
+    window.closeOverlay = function() {
+        overlay.style.opacity = '0';
+        setTimeout(() => {
+            overlay.style.display = 'none';
+        }, 800);
+    };
+
+    function moveButton() {
+        const box = document.querySelector('.love-question-box');
+        const boxRect = box.getBoundingClientRect();
+        
+        if (jabeenBtn.style.position !== 'absolute') {
+            jabeenBtn.style.position = 'absolute';
+        }
+        
+        const maxX = boxRect.width - jabeenBtn.offsetWidth - 40;
+        const maxY = boxRect.height - jabeenBtn.offsetHeight - 40;
+        
+        const randomX = Math.floor(Math.random() * maxX) + 20;
+        const randomY = Math.floor(Math.random() * maxY) + 20;
+        
+        jabeenBtn.style.left = randomX + 'px';
+        jabeenBtn.style.top = randomY + 'px';
+    }
+
+    document.addEventListener('mousemove', (e) => {
+        // Only run if overlay is visible
+        if (overlay.style.opacity === '0' || overlay.style.display === 'none') return;
+
+        const btnRect = jabeenBtn.getBoundingClientRect();
+        const btnCenterX = btnRect.left + btnRect.width / 2;
+        const btnCenterY = btnRect.top + btnRect.height / 2;
+
+        const distance = Math.hypot(e.clientX - btnCenterX, e.clientY - btnCenterY);
+
+        // Since the button is 250px wide (radius ~125px), trigger dodge when cursor is within 180px of center
+        if (distance < 180) {
+            moveButton();
+        }
+    });
+
+    jabeenBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault(); 
+        moveButton();
+    });
+
+    // Photo Modal Logic
+    const photoModal = document.getElementById('photo-modal');
+    const modalImg = document.getElementById('modal-img');
+    const modalMessage = document.getElementById('modal-message');
+
+    window.openPhotoModal = function(imgSrc, message) {
+        modalImg.src = imgSrc;
+        modalMessage.innerText = message;
+        
+        photoModal.style.display = 'flex';
+        // Trigger reflow
+        void photoModal.offsetWidth;
+        photoModal.style.opacity = '1';
+        photoModal.querySelector('.photo-modal-content').style.transform = 'scale(1)';
+    };
+
+    window.closePhotoModal = function() {
+        photoModal.style.opacity = '0';
+        photoModal.querySelector('.photo-modal-content').style.transform = 'scale(0.8)';
+        setTimeout(() => {
+            photoModal.style.display = 'none';
+        }, 400);
+    };
+
+    // Close modal when clicking outside of it
+    photoModal.addEventListener('click', (e) => {
+        if (e.target === photoModal) {
+            closePhotoModal();
+        }
+    });
+});
+
+:root {
+    --primary-color: #ff8fa3;
+    --secondary-color: #ffb3c6;
+    --accent-color: #ff4d6d;
+    --bg-gradient: linear-gradient(135deg, #fff0f3 0%, #ffccd5 100%);
+    --text-dark: #590d22;
+    --text-light: #800f2f;
+    --white: rgba(255, 255, 255, 0.9);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-image: url('photo1.jpg');
+    background-size: cover;
+    background-position: center 40%;
+    background-attachment: fixed;
+    color: var(--text-dark);
+    overflow-x: hidden;
+}
+
+/* Love Overlay */
+#love-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 1000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    transition: opacity 0.8s ease;
+}
+
+.love-question-box {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px);
+    padding: 3rem 2rem;
+    border-radius: 20px;
+    box-shadow: 0 15px 40px rgba(255, 77, 109, 0.2);
+    text-align: center;
+    max-width: 90%;
+    width: 400px;
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    position: relative;
+    min-height: 400px;
+}
+
+.love-question-box h2 {
+    color: var(--accent-color);
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    font-family: 'Dancing Script', cursive;
+}
+
+.options {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: center;
+    position: relative;
+}
+
+.option-btn {
+    padding: 1rem 3rem;
+    font-size: 1.2rem;
+    border: none;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 30px;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    transition: transform 0.2s, background 0.3s;
+    width: 250px;
+    box-shadow: 0 5px 15px rgba(255, 77, 109, 0.3);
+}
+
+.option-btn:hover {
+    background: var(--accent-color);
+    transform: scale(1.05);
+}
+
+#jabeenBtn {
+    transition: top 0.1s ease, left 0.1s ease;
+    z-index: 1001;
+}
+
+/* Popup Photo Container */
+.popup-photo-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.95);
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+    opacity: 0;
+    transform: scale(0.8);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    text-align: center;
+    position: absolute;
+    border: 1px solid rgba(255, 77, 109, 0.2);
+}
+
+.popup-img {
+    width: 300px;
+    height: 380px;
+    object-fit: cover;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.popup-photo-container h2 {
+    font-family: 'Dancing Script', cursive;
+    color: var(--accent-color);
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.8);
+}
+
+.continue-btn {
+    width: auto;
+    padding: 1rem 2.5rem;
+}
+
+/* Photo Message Modal */
+#photo-modal {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    transition: opacity 0.4s ease;
+}
+
+.photo-modal-content {
+    background: white;
+    padding: 2.5rem 2rem 2rem 2rem;
+    border-radius: 15px;
+    max-width: 90vw;
+    width: 500px;
+    text-align: center;
+    position: relative;
+    transform: scale(0.8);
+    transition: transform 0.4s ease;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+}
+
+.close-modal {
+    position: absolute;
+    top: 5px;
+    right: 15px;
+    font-size: 2.5rem;
+    color: var(--text-light);
+    cursor: pointer;
+    transition: color 0.3s;
+    font-family: 'Inter', sans-serif;
+}
+
+.close-modal:hover {
+    color: var(--accent-color);
+}
+
+#modal-img {
+    width: 100%;
+    max-height: 45vh;
+    object-fit: contain;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+    background: #f8f8f8;
+}
+
+.modal-message-text {
+    font-family: 'Dancing Script', cursive;
+    font-size: 2.2rem;
+    color: var(--accent-color);
+    line-height: 1.4;
+    padding: 0 1rem;
+}
+
+/* Typography */
+h1,
+h2,
+.signature {
+    font-family: 'Dancing Script', cursive;
+}
+
+/* Floating Particles */
+#particles {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 10;
+}
+
+.petal {
+    position: absolute;
+    background-color: var(--primary-color);
+    border-radius: 15px 0 15px 0;
+    opacity: 0.6;
+    animation: fall linear infinite, sway ease-in-out infinite alternate;
+}
+
+@keyframes fall {
+    0% {
+        top: -10%;
+    }
+
+    100% {
+        top: 110%;
+    }
+}
+
+@keyframes sway {
+    0% {
+        transform: translateX(-20px) rotate(0deg);
+    }
+
+    100% {
+        transform: translateX(20px) rotate(360deg);
+    }
+}
+
+/* Hero Section */
+.hero {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    padding: 2rem;
+}
+
+.glass-panel {
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 30px;
+    padding: 4rem 3rem;
+    text-align: center;
+    box-shadow: 0 8px 32px rgba(255, 77, 109, 0.15);
+    animation: fadeIn 2s ease-out;
+    max-width: 800px;
+    width: 100%;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.title {
+    font-size: 6rem;
+    line-height: 1.1;
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.5);
+}
+
+.subtitle {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    font-style: italic;
+    color: var(--text-light);
+    margin-bottom: 3rem;
+}
+
+.scroll-indicator {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    opacity: 0.8;
+}
+
+.arrow {
+    animation: bounce 2s infinite;
+    font-size: 1.2rem;
+}
+
+@keyframes bounce {
+
+    0%,
+    20%,
+    50%,
+    80%,
+    100% {
+        transform: translateY(0);
+    }
+
+    40% {
+        transform: translateY(-10px);
+    }
+
+    60% {
+        transform: translateY(-5px);
+    }
+}
+
+/* Interactive Card Section */
+.card-section {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 4rem 2rem;
+    perspective: 1000px;
+}
+
+.envelope-wrapper {
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    width: 100%;
+    max-width: 600px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.envelope-wrapper:hover {
+    transform: scale(1.02);
+}
+
+.envelope {
+    position: relative;
+    width: 100%;
+    height: 400px;
+    background: #e8a598;
+    /* Darker back part of envelope */
+    border-radius: 10px;
+    margin-bottom: 2rem;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.1);
+}
+
+.envelope-flap {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 50%;
+    background: #f4c2c2;
+    clip-path: polygon(0 0, 50% 100%, 100% 0);
+    z-index: 4;
+    transform-origin: top;
+    transition: transform 0.8s ease-in-out;
+}
+
+.envelope-body {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: #f8edeb;
+    clip-path: polygon(0 100%, 0 0, 50% 50%, 100% 0, 100% 100%);
+    z-index: 3;
+    border-radius: 0 0 10px 10px;
+}
+
+/* The Letter inside */
+.letter {
+    position: absolute;
+    bottom: 0;
+    left: 5%;
+    width: 90%;
+    height: 90%;
+    background: #fff;
+    border-radius: 8px;
+    padding: 1.5rem;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+    z-index: 2;
+    transition: transform 0.8s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    overflow-y: auto;
+}
+
+.letter h2 {
+    font-size: 2.5rem;
+    color: var(--accent-color);
+    margin-bottom: 1rem;
+}
+
+.letter p {
+    font-size: 0.95rem;
+    line-height: 1.5;
+    margin-bottom: 0.8rem;
+    color: var(--text-dark);
+}
+
+.letter .signature {
+    font-size: 2rem;
+    text-align: right;
+    margin-top: 1rem;
+    color: var(--accent-color);
+}
+
+.instruction-text {
+    font-family: 'Playfair Display', serif;
+    font-style: italic;
+    color: var(--text-light);
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        opacity: 0.5;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0.5;
+    }
+}
+
+/* Open State */
+.envelope-wrapper.open .envelope-flap {
+    transform: rotateX(180deg);
+    z-index: 1;
+}
+
+.envelope-wrapper.open .letter {
+    transform: translateY(-200px);
+    z-index: 5;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+}
+
+/* Polaroid Gallery */
+.gallery-section {
+    padding: 4rem 2rem 8rem;
+    text-align: center;
+}
+
+.gallery-title {
+    font-size: 4rem;
+    color: var(--accent-color);
+    margin-bottom: 3rem;
+    text-shadow: 1px 1px 3px rgba(255, 255, 255, 0.5);
+}
+
+.polaroid-gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 2rem;
+    padding: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.polaroid {
+    background: white;
+    padding: 1.2rem 1.2rem 1.8rem 1.2rem;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    position: relative;
+    transition: transform 0.3s ease, z-index 0s, box-shadow 0.3s ease;
+    width: 350px;
+    cursor: pointer;
+}
+
+.polaroid:hover {
+    transform: scale(1.08) rotate(0deg) translateY(-10px) !important;
+    z-index: 10;
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+    animation-play-state: paused;
+}
+
+.polaroid img {
+    width: 100%;
+    height: 400px;
+    object-fit: cover;
+    border: 1px solid #f0f0f0;
+}
+
+.polaroid .caption {
+    font-family: 'Dancing Script', cursive;
+    text-align: center;
+    font-size: 1.8rem;
+    margin-top: 1rem;
+    color: var(--accent-color);
+}
+
+/* Scattered effect and floating animations */
+@keyframes floatPolaroid {
+
+    0%,
+    100% {
+        transform: rotate(var(--rot)) translateY(0);
+    }
+
+    50% {
+        transform: rotate(var(--rot)) translateY(-20px);
+    }
+}
+
+.p1 {
+    --rot: -6deg;
+    z-index: 1;
+    animation: floatPolaroid 5s ease-in-out infinite;
+}
+
+.p2 {
+    --rot: 8deg;
+    z-index: 2;
+    animation: floatPolaroid 6s ease-in-out infinite 1s;
+}
+
+.p3 {
+    --rot: -4deg;
+    z-index: 3;
+    animation: floatPolaroid 5.5s ease-in-out infinite 0.5s;
+}
+
+.p4 {
+    --rot: 5deg;
+    z-index: 4;
+    animation: floatPolaroid 6.5s ease-in-out infinite 2s;
+}
+
+.p5 {
+    --rot: -7deg;
+    z-index: 5;
+    animation: floatPolaroid 5.2s ease-in-out infinite 1.5s;
+}
+
+.p6 {
+    --rot: 3deg;
+    z-index: 6;
+    animation: floatPolaroid 5.8s ease-in-out infinite 0.8s;
+}
+
+.p7 {
+    --rot: -5deg;
+    z-index: 7;
+    animation: floatPolaroid 6.2s ease-in-out infinite 2.5s;
+    width: 450px; /* Made it wider to fit all 3 people */
+    max-width: 90vw;
+}
+
+.p7 img {
+    height: 300px;
+    object-fit: cover;
+    object-position: center; /* Center it now that it's wider */
+}
+
+.footer-note {
+    margin-top: 5rem;
+    font-size: 2rem;
+    font-family: 'Dancing Script', cursive;
+    color: #000000;
+    background: rgba(255, 255, 255, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    padding: 1rem 3rem;
+    border-radius: 50px;
+    display: inline-block;
+    box-shadow: 0 10px 30px rgba(255, 77, 109, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.8);
+    font-weight: 900;
+    text-shadow: 1px 1px 2px rgba(255, 255, 255, 0.5);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .title {
+        font-size: 4rem;
+    }
+
+    .glass-panel {
+        padding: 3rem 1.5rem;
+    }
+
+    .letter {
+        padding: 1.5rem;
+    }
+
+    .letter h2 {
+        font-size: 2rem;
+    }
+
+    .letter p {
+        font-size: 0.9rem;
+    }
+
+    .polaroid {
+        transform: none !important;
+        margin-bottom: 1rem;
+    }
+
+    .polaroid:hover {
+        transform: scale(1.05) !important;
+    }
+}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Happy Mother's Day</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@600;700&family=Inter:wght@300;400;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <!-- Love Question Overlay -->
+    <div id="love-overlay">
+        <div class="love-question-box" id="questionBox">
+            <h2>Whom do you love the most?</h2>
+            <div class="options">
+                <button class="option-btn" onclick="showPopup()">Thawsif</button>
+                <button class="option-btn" onclick="showPopup()">Baji</button>
+                <button class="option-btn" id="jabeenBtn">Jabeen</button>
+            </div>
+        </div>
+        <!-- Popup Photo (hidden initially) -->
+        <div class="popup-photo-container" id="popupPhoto" style="display: none;">
+            <img src="popup_photo.jpg" alt="We love you" class="popup-img">
+            <h2>Aww! We love you too! ❤️</h2>
+            <button class="option-btn continue-btn" onclick="closeOverlay()">See Your Card</button>
+        </div>
+    </div>
+
+    <!-- Floating Particles Container -->
+    <div id="particles"></div>
+
+    <main>
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="glass-panel">
+                <h1 class="title">Happy<br>Mother's Day</h1>
+                <p class="subtitle">mere pyaare ammi😘</p>
+                <div class="scroll-indicator">
+                    <span>A special message for you</span>
+                    <div class="arrow">↓</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Interactive Card Section -->
+        <section class="card-section" id="message">
+            <div class="envelope-wrapper">
+                <div class="envelope">
+                    <div class="envelope-flap"></div>
+                    <div class="letter">
+                        <h2>Dear Ammi,</h2>
+                        <p>ammi'😘...... i lovee youu soo much ammi tumehhh hamara vastaa kettakii kare ammi kabbii kyaa
+                            taklif ayanisakka sobbi taklifaaa tumeh letebii accha pyaar siii sobbbi puchaso puchanisakka
+                            biii bhottt diya ammi🥺🥺......</p>
+                        <p>mai tumara vasta ketta karatobii tumaku hamara uppar ghaiso pyaar kaa sammeh kamuchu ammi
+                            lekinnn i loveee youuu sooo muchh ammiiii😘💖 mejeee support, motivation tumechu ammi</p>
+                        <p class="signature">With all my love ❤️</p>
+                    </div>
+                    <div class="envelope-body"></div>
+                </div>
+                <p class="instruction-text">Tap the envelope to open</p>
+            </div>
+        </section>
+
+        <!-- Gallery Section -->
+        <section class="gallery-section">
+            <h2 class="gallery-title">Beautiful Memories</h2>
+            <div class="polaroid-gallery">
+                <div class="polaroid p1"
+                    onclick="openPhotoModal('photo1.jpg', 'kabbi aisachu hastee rhavoo Ammi my cutie pie😘. ❤️')">
+                    <img src="photo1.jpg" alt="Memory 1">
+                    <div class="caption">Love you Ammi ❤️</div>
+                </div>
+                <div class="polaroid p2"
+                    onclick="openPhotoModal('photo2.jpg', 'Allah meje doyaso the bestt gift tumeh💖')">
+                    <img src="photo2.jpg" alt="Memory 2">
+                    <div class="caption">Always smiling</div>
+                </div>
+                <div class="polaroid p3" onclick="openPhotoModal('photo3.jpg', 'mere pyaaraa ammi😘😘😘')">
+                    <img src="photo3.jpg" alt="Memory 3">
+                    <div class="caption">My world</div>
+                </div>
+                <div class="polaroid p4"
+                    onclick="openPhotoModal('photo4.jpg', 'You make our family whole. We love you infinitely!.')">
+                    <img src="photo4.jpg" alt="Memory 4">
+                    <div class="caption">Forever grateful</div>
+                </div>
+                <div class="polaroid p5"
+                    onclick="openPhotoModal('photo5.jpg', 'No matter how old I get, I will always need you.')">
+                    <img src="photo5.jpg" alt="Memory 5">
+                    <div class="caption">best ammi in the world</div>
+                </div>
+                <div class="polaroid p6" onclick="openPhotoModal('photo6.jpg', 'love you so muchh ammi😍🥰')">
+                    <img src="photo6.jpg" alt="Memory 6">
+                    <div class="caption">Sweet memories</div>
+                </div>
+                <div class="polaroid p7"
+                    onclick="openPhotoModal('photo7.jpg', 'You are the backbone of our family. Thank you for being you.')">
+                    <img src="photo7.jpg" alt="Memory 7">
+                    <div class="caption">Our backbone</div>
+                </div>
+            </div>
+            <p class="footer-note">love youu soo muchhh ammiiii😘💖</p>
+        </section>
+    </main>
+
+    <!-- Background Music -->
+    <audio id="bgMusic" loop>
+        <source src="song.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Photo Message Modal -->
+    <div id="photo-modal" style="display: none;">
+        <div class="photo-modal-content">
+            <span class="close-modal" onclick="closePhotoModal()">&times;</span>
+            <img id="modal-img" src="" alt="Memory">
+            <p id="modal-message" class="modal-message-text"></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
